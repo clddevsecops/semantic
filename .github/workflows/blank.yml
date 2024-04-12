@@ -16,11 +16,14 @@ jobs:
         with:
           fetch-depth: 0  # Necessary to fetch all tags
 
+      - name: List all tags
+        run: git tag
+
       - name: Determine Semantic Version
         id: semver
         uses: paulhatch/semantic-version@v5.3.0
         with:
-          tag_prefix: "v"
+          tag_prefix: ""
           major_pattern: "(MAJOR)"
           minor_pattern: "(MINOR)"
           version_format: "${major}.${minor}.${patch}"
@@ -28,11 +31,21 @@ jobs:
       - name: Append -dev to version
         run: echo "VERSION_WITH_SUFFIX=v${{ steps.semver.outputs.version }}-dev" >> $GITHUB_ENV
 
+      - name: Print All Tags and New Tag
+        run: |
+          echo "All existing tags:"
+          git tag
+          echo "New tag to be created: $VERSION_WITH_SUFFIX"
+
       - name: Create and Push Tag
         run: |
           TAG=$VERSION_WITH_SUFFIX
-          echo "Creating tag: $TAG"
-          git tag $TAG
-          git push origin $TAG
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists."
+          else
+            echo "Creating tag: $TAG"
+            git tag $TAG
+            git push origin $TAG
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
