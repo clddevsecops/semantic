@@ -3,7 +3,10 @@ name: Semantic Versioning Workflow
 on:
   push:
     branches: [ main ]  # Or your default branch
-
+    
+permissions:
+  contents: write
+  
 jobs:
   determine_semantic_version:
     runs-on: ubuntu-latest
