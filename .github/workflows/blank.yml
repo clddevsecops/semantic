@@ -2,7 +2,8 @@ name: Semantic Versioning Workflow
 
 on:
   push:
-    branches: [ main ]  # Or your default branch
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -14,22 +15,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0 # This is to ensure all history and tags are fetched
+          fetch-depth: '0'  # Fetch all history for all tags and branches
+
+      - name: List all tags
+        run: git tag
 
       - name: Determine Semantic Version
         id: semver
         uses: paulhatch/semantic-version@v5.3.0
         with:
-          branch: main
           tag_prefix: "v"
           major_pattern: "(MAJOR)"
           minor_pattern: "(MINOR)"
-          patch_pattern: "(PATCH)" # Ensure you have a patch pattern if you use it in commit messages
           version_format: "${major}.${minor}.${patch}-dev"
           debug: true
 
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists"
+            echo "TAG_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "Tag does not exist"
+            echo "TAG_EXISTS=false" >> $GITHUB_ENV
+          fi
+        env:
+          TAG: "v${{ steps.semver.outputs.version }}"
+
       - name: Create and Push Tag
-        if: steps.semver.outputs.version != '' # Run this step only if a version was determined
+        if: env.TAG_EXISTS == 'false'
         run: |
           TAG="v${{ steps.semver.outputs.version }}"
           git tag $TAG
