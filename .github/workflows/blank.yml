@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
+      
       - name: Determine Semantic Version
         id: semver
         uses: paulhatch/semantic-version@v5.3.0
@@ -18,8 +18,13 @@ jobs:
           tag_prefix: "v"
           major_pattern: "(MAJOR)"
           minor_pattern: "(MINOR)"
-          version_format: "${major}.${minor}.${patch}-dev"
+          version_format: "v${major}.${minor}.${patch}-dev"
           debug: true
 
-      - name: Output Version
-        run: echo "The new version is ${{ steps.semver.outputs.version }}"
+      - name: Create and Push Tag
+        run: |
+          TAG="v${{ steps.semver.outputs.version }}"
+          git tag $TAG
+          git push origin $TAG
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
