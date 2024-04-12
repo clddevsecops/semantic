@@ -2,54 +2,36 @@ name: Semantic Versioning Workflow
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 permissions:
   contents: write
 
 jobs:
-  determine_semantic_version:
+  determine_and_tag_version:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: '0'  # Fetch all history for all tags and branches
-
-      - name: List all tags
-        run: git tag
+          fetch-depth: 0  # Necessary to fetch all tags
 
       - name: Determine Semantic Version
         id: semver
         uses: paulhatch/semantic-version@v5.3.0
         with:
-          tag_prefix: "v"
+          tag_prefix: ""
           major_pattern: "(MAJOR)"
           minor_pattern: "(MINOR)"
-          version_format: "${major}.${minor}.${patch}-dev"
-          debug: true
-          
-      - name: Print determined version
-        run: echo "Determined version is ${{ steps.semver.outputs.version }}"
+          version_format: "${major}.${minor}.${patch}"
 
-      - name: Check if tag exists
-        id: check_tag
-        run: |
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists"
-            echo "TAG_EXISTS=true" >> $GITHUB_ENV
-          else
-            echo "Tag does not exist"
-            echo "TAG_EXISTS=false" >> $GITHUB_ENV
-          fi
-        env:
-          TAG: "v${{ steps.semver.outputs.version }}"
+      - name: Append -dev to version
+        run: echo "VERSION_WITH_SUFFIX=v${{ steps.semver.outputs.version }}-dev" >> $GITHUB_ENV
 
       - name: Create and Push Tag
-        if: env.TAG_EXISTS == 'false'
         run: |
-          TAG="v${{ steps.semver.outputs.version }}"
+          TAG=$VERSION_WITH_SUFFIX
+          echo "Creating tag: $TAG"
           git tag $TAG
           git push origin $TAG
         env:
