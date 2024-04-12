@@ -1,0 +1,25 @@
+name: Semantic Versioning Workflow
+
+on:
+  push:
+    branches: [ main ]  # Or your default branch
+
+jobs:
+  determine_semantic_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Determine Semantic Version
+        id: semver
+        uses: paulhatch/semantic-version@v5.3.0
+        with:
+          tag_prefix: "v"
+          major_pattern: "(MAJOR)"
+          minor_pattern: "(MINOR)"
+          version_format: "${major}.${minor}.${patch}-dev"
+          debug: true
+
+      - name: Output Version
+        run: echo "The new version is ${{ steps.semver.outputs.version }}"
