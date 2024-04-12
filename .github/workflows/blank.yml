@@ -18,7 +18,7 @@ jobs:
           tag_prefix: "v"
           major_pattern: "(MAJOR)"
           minor_pattern: "(MINOR)"
-          version_format: "v${major}.${minor}.${patch}-dev"
+          version_format: "${major}.${minor}.${patch}-dev"
           debug: true
 
       - name: Create and Push Tag
