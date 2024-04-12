@@ -3,28 +3,33 @@ name: Semantic Versioning Workflow
 on:
   push:
     branches: [ main ]  # Or your default branch
-    
+
 permissions:
   contents: write
-  
+
 jobs:
   determine_semantic_version:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
+        with:
+          fetch-depth: 0 # This is to ensure all history and tags are fetched
+
       - name: Determine Semantic Version
         id: semver
         uses: paulhatch/semantic-version@v5.3.0
         with:
+          branch: main
           tag_prefix: "v"
           major_pattern: "(MAJOR)"
           minor_pattern: "(MINOR)"
+          patch_pattern: "(PATCH)" # Ensure you have a patch pattern if you use it in commit messages
           version_format: "${major}.${minor}.${patch}-dev"
           debug: true
 
       - name: Create and Push Tag
+        if: steps.semver.outputs.version != '' # Run this step only if a version was determined
         run: |
           TAG="v${{ steps.semver.outputs.version }}"
           git tag $TAG
